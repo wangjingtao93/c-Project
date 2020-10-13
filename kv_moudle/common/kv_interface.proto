@@ -1,0 +1,62 @@
+syntax="proto2";
+package kvmoudle;
+option cc_generic_services = true;
+
+
+message KVRequest {
+    required string table = 1;
+    required string op = 2;
+    required string key = 3;   // key is set to "" when batch or snapshot(only for fs)
+    optional string value = 4;
+    //repeated BatchRequest batch = 5; // Re-use this KVRequest to send batch, to minimize code change
+    optional bool force = 6; // force read
+    optional int32  snap_id = 7;   // snap_id and attach_id will be used if op="SNAP"
+    optional int32  attach_id = 8;
+}
+
+message KVResponse {
+    required int32 status = 1;
+    optional string value = 2;
+    optional string redirect = 3;
+    optional string raft_conf = 4;
+    optional int64 term = 5;
+    optional int64 last_applied_id = 6;
+}
+
+
+message TableRequest {
+    required string table = 1;
+    optional string raft_conf = 2;
+}
+
+message TableResponse {
+    required int32 status = 1;
+    optional int32 progress = 2;
+    optional string redirect = 3;
+    optional string raft_conf = 4;
+}
+
+// copied from braft
+// enum RaftState {
+//     // Don't change the order if you are not sure about the usage.
+//     STATE_LEADER = 1;
+//     STATE_TRANSFERRING = 2;
+//     STATE_CANDIDATE = 3;
+//     STATE_FOLLOWER = 4;
+//     STATE_ERROR = 5;
+//     STATE_UNINITIALIZED = 6;
+//     STATE_SHUTTING = 7;
+//     STATE_SHUTDOWN = 8;
+// };
+
+
+
+service KVService {
+    rpc Get (KVRequest) returns (KVResponse);
+    rpc Put (KVRequest) returns (KVResponse);
+    rpc Delete (KVRequest) returns (KVResponse);
+
+    rpc CreateTable (TableRequest) returns (TableResponse);
+
+};
+
